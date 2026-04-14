@@ -1,0 +1,19 @@
+{
+  "label": "peer_relative_composite",
+  "model": "upgraded_logistic",
+  "rows_latest": 42751,
+  "rows_org_level_shocks": 384759,
+  "scenarios": [
+    "donation_shock_10",
+    "donation_shock_20",
+    "donation_shock_30",
+    "expense_inflation_10",
+    "expense_inflation_5",
+    "grant_shock_10",
+    "grant_shock_20",
+    "program_shock_10",
+    "program_shock_20"
+  ],
+  "top_scenario": "expense_inflation_10",
+  "shock_output_path": "C:\\Users\\ktanm\\Downloads\\records\\distressedupgrade\\distressed - Copy\\streamlit_demo_data\\upgraded_shock_simulation_results.csv"
+}

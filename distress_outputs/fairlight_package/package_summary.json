@@ -1,0 +1,17 @@
+{
+  "package_dir": "E:\\distressed\\distress_outputs\\fairlight_package",
+  "shock_rows": 384759,
+  "benchmark_rows": 42751,
+  "shortlist_rows": 30,
+  "sector_coverage_rate": 0.7115856939018971,
+  "top_scenario": {
+    "scenario_name": "expense_inflation_10",
+    "org_count": 42751,
+    "avg_baseline_risk": 0.1984291367873764,
+    "avg_shocked_risk": 0.21660790830170976,
+    "avg_absolute_increase": 0.018178771514333374,
+    "median_absolute_increase": 0.007859503240837784,
+    "bucket_upshift_share": 0.10299174288320741,
+    "severe_jump_share": 0.0010759982222638066
+  }
+}

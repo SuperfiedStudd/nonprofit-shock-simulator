@@ -1,0 +1,25 @@
+{
+  "results_dir": "E:\\distressed - Copy\\new results",
+  "selected_label": "peer_relative_composite",
+  "selected_features": [
+    "liability_ratio_clean",
+    "net_asset_ratio_clean",
+    "revenue_growth_clean",
+    "expense_growth_gap",
+    "asset_growth_clean",
+    "donation_share_clean",
+    "revenue_hhi_clean",
+    "salary_share_clean",
+    "org_age_clean",
+    "peer_group",
+    "peer_pct_margin_obs",
+    "peer_pct_coverage_obs",
+    "peer_pct_liability_obs",
+    "peer_pct_revenue_growth_obs",
+    "peer_margin_z_obs",
+    "peer_coverage_z_obs"
+  ],
+  "final_model": "upgraded_logistic",
+  "rows_core_990": 145852,
+  "top_shock_scenario": "expense_inflation_10"
+}

@@ -1,0 +1,22 @@
+{
+  "rows_raw": 540860,
+  "rows_core_all_forms": 145925,
+  "rows_model_990": 145852,
+  "selected_label": "composite_distress",
+  "output_dir": "E:\\distressed\\distress_outputs",
+  "final_metric_row": {
+    "split_name": "train_2017_2018_2021_test_2022",
+    "roc_auc": 0.7208739875041162,
+    "pr_auc": 0.4744728427729645,
+    "brier": 0.1313902404027181,
+    "prevalence": 0.192701428781853,
+    "precision_at_0_20": 0.350898348004341,
+    "predicted_positive_at_0_20": 0.30538370894093386,
+    "precision_at_top_5pct": 0.7525773195876289,
+    "precision_at_top_10pct": 0.6038291605301914,
+    "precision_at_top_20pct": 0.43059646539027985,
+    "model_name": "logistic_regression",
+    "train_rows": 118696,
+    "test_rows": 27156
+  }
+}

@@ -8,6 +8,14 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from streamlit_demo.data_loader import load_demo_bundle
+from streamlit_demo.geographic_view import (
+    GEO_METRICS,
+    MAP_YEARS,
+    build_geographic_snapshot,
+    make_geographic_map,
+    make_top_states_chart,
+    make_yoy_delta_chart,
+)
 from streamlit_demo.logic import (
     SCENARIO_LABELS,
     benchmark_callouts,
@@ -70,6 +78,7 @@ TAB_TITLES = [
     "3. Shock Simulator",
     "4. High-Impact Discovery",
     "5. Portfolio Rankings",
+    "6. Geographic View",
 ]
 
 NAVY = "#12395b"
@@ -1019,6 +1028,55 @@ def tab_portfolio_rankings(bundle: dict) -> None:
     )
 
 
+def tab_geographic_view() -> None:
+    st.markdown('<div class="section-header">National footprint</div>', unsafe_allow_html=True)
+    st.markdown(
+        selector_note_html(
+            "Map layers are sourced from the geographic feature bundle in `mapcode/`, wired into the existing app structure "
+            "without changing the first five tabs."
+        ),
+        unsafe_allow_html=True,
+    )
+
+    control_left, control_mid, control_right = st.columns([1.0, 1.25, 0.8])
+    with control_left:
+        selected_year = st.selectbox("Tax year", MAP_YEARS, index=len(MAP_YEARS) - 1, key="geo_year")
+    with control_mid:
+        metric_options = list(GEO_METRICS.keys())
+        selected_metric = st.selectbox("Map metric", metric_options, key="geo_metric")
+    with control_right:
+        show_dots = st.toggle("Show organization dots", value=True, key="geo_show_dots")
+
+    snapshot = build_geographic_snapshot(selected_year)
+    render_metric_cards(
+        [
+            ("States covered", f"{snapshot['state_count']:,}", "States with active mapped organizations"),
+            ("Active orgs", f"{snapshot['active_count']:,}", f"Observed active rows in {selected_year}"),
+            ("Fading orgs", f"{snapshot['fading_count']:,}", "Trailing one-to-two-year ghost markers"),
+            ("Risk coverage", format_probability(snapshot["scored_coverage"]), "Share with current distress scores"),
+        ]
+    )
+
+    st.plotly_chart(
+        make_geographic_map(snapshot["state_agg"], snapshot["dots"], selected_metric, show_dots),
+        width="stretch",
+    )
+
+    chart_left, chart_right = st.columns(2)
+    with chart_left:
+        st.markdown('<div class="section-header">Top states</div>', unsafe_allow_html=True)
+        st.plotly_chart(make_top_states_chart(snapshot["state_agg"], selected_metric), width="stretch")
+    with chart_right:
+        st.markdown('<div class="section-header">Year-over-year change</div>', unsafe_allow_html=True)
+        st.plotly_chart(make_yoy_delta_chart(snapshot["state_agg"], selected_year), width="stretch")
+
+    st.markdown(note_card_html(snapshot["risk_metric_note"]), unsafe_allow_html=True)
+    st.markdown(
+        section_card_html("Metric definition", GEO_METRICS[selected_metric].help_text),
+        unsafe_allow_html=True,
+    )
+
+
 def main() -> None:
     st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
     bundle = get_bundle()
@@ -1037,7 +1095,7 @@ def main() -> None:
     selected_shocks = org_shocks(bundle["shock_results"], selected_ein)
     render_company_brief(selected_row, selected_shocks, bundle["shortlists"])
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(TAB_TITLES)
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(TAB_TITLES)
     with tab1:
         tab_risk_lookup(selected_row, bundle["threshold_scan"])
     with tab2:
@@ -1054,6 +1112,8 @@ def main() -> None:
         tab_high_impact_discovery(bundle["shortlists"])
     with tab5:
         tab_portfolio_rankings(bundle)
+    with tab6:
+        tab_geographic_view()
 
 
 if __name__ == "__main__":

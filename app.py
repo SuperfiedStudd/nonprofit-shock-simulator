@@ -8,14 +8,6 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from streamlit_demo.data_loader import load_demo_bundle
-from streamlit_demo.geographic_view import (
-    GEO_METRICS,
-    MAP_YEARS,
-    build_geographic_snapshot,
-    make_geographic_map,
-    make_top_states_chart,
-    make_yoy_delta_chart,
-)
 from streamlit_demo.logic import (
     SCENARIO_LABELS,
     benchmark_callouts,
@@ -78,7 +70,6 @@ TAB_TITLES = [
     "3. Shock Simulator",
     "4. High-Impact Discovery",
     "5. Portfolio Rankings",
-    "6. Geographic View",
 ]
 
 NAVY = "#12395b"
@@ -1099,7 +1090,7 @@ def main() -> None:
     selected_shocks = org_shocks(bundle["shock_results"], selected_ein)
     render_company_brief(selected_row, selected_shocks, bundle["shortlists"])
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(TAB_TITLES)
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(TAB_TITLES)
     with tab1:
         tab_risk_lookup(selected_row, bundle["threshold_scan"])
     with tab2:
@@ -1116,8 +1107,6 @@ def main() -> None:
         tab_high_impact_discovery(bundle["shortlists"])
     with tab5:
         tab_portfolio_rankings(bundle)
-    with tab6:
-        tab_geographic_view()
 
 
 if __name__ == "__main__":

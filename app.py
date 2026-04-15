@@ -1048,6 +1048,10 @@ def tab_geographic_view() -> None:
         show_dots = st.toggle("Show organization dots", value=True, key="geo_show_dots")
 
     snapshot = build_geographic_snapshot(selected_year)
+    if not snapshot.get("cohort_available", True):
+        st.warning("The geographic dataset is not deployed in this environment, so Geographic View is unavailable.")
+        return
+
     render_metric_cards(
         [
             ("States covered", f"{snapshot['state_count']:,}", "States with active mapped organizations"),

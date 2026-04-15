@@ -367,6 +367,33 @@ def _load_score_lookup() -> tuple[pd.DataFrame, str | None]:
 
 @st.cache_resource(show_spinner=False)
 def load_geographic_bundle() -> dict[str, Any]:
+    if not COHORT_PATH.exists():
+        empty_panel = pd.DataFrame()
+        empty_state_year_agg = pd.DataFrame(
+            columns=[
+                "tax_year",
+                "state",
+                "state_name",
+                "org_count",
+                "median_revenue",
+                "median_operating_margin",
+                "median_distress_probability",
+                "high_risk_share",
+                "scored_org_count",
+                "prev_org_count",
+                "org_count_delta",
+            ]
+        )
+        return {
+            "panel": empty_panel,
+            "state_year_agg": empty_state_year_agg,
+            "score_path": None,
+            "score_coverage_overall": 0.0,
+            "scored_unique_eins": 0,
+            "cohort_unique_eins": 0,
+            "cohort_available": False,
+        }
+
     usecols = [
         "ein",
         "business_name",
@@ -480,6 +507,7 @@ def load_geographic_bundle() -> dict[str, Any]:
         "score_coverage_overall": (scored_unique / cohort_unique) if cohort_unique else 0.0,
         "scored_unique_eins": scored_unique,
         "cohort_unique_eins": cohort_unique,
+        "cohort_available": True,
     }
 
 
@@ -488,6 +516,19 @@ def build_geographic_snapshot(year: int) -> dict[str, Any]:
     bundle = load_geographic_bundle()
     panel = bundle["panel"]
     state_year_agg = bundle["state_year_agg"]
+
+    if not bundle.get("cohort_available", True):
+        return {
+            "state_agg": pd.DataFrame(),
+            "previous_state_agg": pd.DataFrame(),
+            "dots": pd.DataFrame(),
+            "active_count": 0,
+            "fading_count": 0,
+            "state_count": 0,
+            "scored_coverage": 0.0,
+            "risk_metric_note": "Geographic dataset is not deployed in this environment.",
+            "cohort_available": False,
+        }
 
     year_frame = panel.loc[panel["tax_year"].eq(year)].copy()
     active_rows = year_frame.loc[year_frame["observed_flag"].eq(1)].copy()
@@ -514,6 +555,7 @@ def build_geographic_snapshot(year: int) -> dict[str, Any]:
             if bundle["score_path"]
             else "Risk-based map views are unavailable because no scored-universe file was found."
         ),
+        "cohort_available": True,
     }
 
 

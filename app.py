@@ -63,13 +63,13 @@ from streamlit_demo.ui import (
 )
 
 
-PAGE_TITLE = "Fairlight Resilience Demo"
+PAGE_TITLE = "Fairlight Resilience Decision System"
 TAB_TITLES = [
-    "1. Risk Score Lookup",
+    "1. Resilience Prediction",
     "2. Peer Benchmarking",
-    "3. Shock Simulator",
-    "4. High-Impact Discovery",
-    "5. Portfolio Rankings",
+    "3. Deterministic Stress Testing",
+    "4. Attention Prioritization",
+    "5. Portfolio Prioritization",
 ]
 
 NAVY = "#12395b"
@@ -275,7 +275,7 @@ def make_benchmark_chart(row: pd.Series) -> go.Figure:
         )
     )
     fig.add_vline(x=50, line_dash="dot", line_color="#9fb3c8", line_width=1.2)
-    fig.update_xaxes(title="Percentile within peer group", range=[0, 112])
+    fig.update_xaxes(title="Percentile within peer frame", range=[0, 112])
     fig.update_yaxes(title="")
     return apply_chart_style(fig, height=420, margin_left=155, margin_right=82, margin_bottom=40)
 
@@ -300,7 +300,7 @@ def make_scenario_delta_chart(shocks: pd.DataFrame, selected_scenario: str) -> g
             hovertemplate="%{y}<br>%{x:.1f} point increase<extra></extra>",
         )
     )
-    fig.update_xaxes(title="Risk increase under shock (points)")
+    fig.update_xaxes(title="Risk increase under deterministic shock (points)")
     fig.update_yaxes(title="")
     return apply_chart_style(fig, height=460, margin_left=235, margin_right=84, margin_bottom=36)
 
@@ -329,7 +329,7 @@ def make_discovery_chart(shortlists: pd.DataFrame) -> go.Figure:
     )
     fig.update_traces(marker=dict(size=13, line=dict(color="#ffffff", width=1.3), opacity=0.9))
     fig.update_xaxes(title="Baseline risk (%)")
-    fig.update_yaxes(title="Worst-case shock delta (points)")
+    fig.update_yaxes(title="Worst-case deterministic stress delta (points)")
     return apply_chart_style(fig, height=440, margin_left=48, margin_right=24, margin_bottom=50, showlegend=True)
 
 
@@ -370,7 +370,7 @@ def render_sidebar(bundle: dict) -> None:
             sidebar_stat_card_html(
                 "Organizations scored",
                 f"{len(orgs):,}",
-                "Observed 2023 nonprofit rows available in the scored universe.",
+                "Observed nonprofit rows available in the current scored universe.",
             ),
             unsafe_allow_html=True,
         )
@@ -378,7 +378,7 @@ def render_sidebar(bundle: dict) -> None:
             sidebar_stat_card_html(
                 "Stress scenarios",
                 f"{shock_results['scenario_name'].nunique() if not shock_results.empty else len(SCENARIO_LABELS)}",
-                "Deterministic downside tests available in the simulator.",
+                "Deterministic planning shocks available in the simulator.",
             ),
             unsafe_allow_html=True,
         )
@@ -386,13 +386,13 @@ def render_sidebar(bundle: dict) -> None:
             sidebar_stat_card_html(
                 "Shortlisted",
                 f"{len(shortlists):,}",
-                "Financial resilience and intervention-readiness shortlist rows.",
+                "Organizations tagged for financially actionable prioritization.",
             ),
             unsafe_allow_html=True,
         )
         st.markdown(
             sidebar_note_card_html(
-                f"Broadest stressor: {scenario_label(top_scenario)}."
+                f"Largest average downside scenario: {scenario_label(top_scenario)}."
             ),
             unsafe_allow_html=True,
         )
@@ -400,9 +400,9 @@ def render_sidebar(bundle: dict) -> None:
             st.markdown(
                 "\n".join(
                     [
-                        "- Retained label: `peer_relative_composite`",
-                        "- Retained model: `upgraded logistic regression`",
-                        "- Simulator is deterministic, not causal",
+                        "- Distress triage is based on the retained `peer_relative_composite` label",
+                        "- The backbone is a conservative, interpretable logistic model",
+                        "- Scenario shocks are deterministic planning tools, not causal forecasts",
                         "- Peer-relative signals are computed on observed rows only",
                     ]
                 )
@@ -410,9 +410,9 @@ def render_sidebar(bundle: dict) -> None:
 
 
 def render_selector(orgs: pd.DataFrame) -> str:
-    st.markdown('<div class="section-header">Company selector</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Organization selector</div>', unsafe_allow_html=True)
     st.markdown(
-        selector_note_html("Choose a nonprofit from the dropdown to update every tab on the page."),
+        selector_note_html("Choose an organization to refresh the full decision view."),
         unsafe_allow_html=True,
     )
     option_map = {row["org_label"]: row["ein"] for _, row in orgs.iterrows()}
@@ -422,7 +422,7 @@ def render_selector(orgs: pd.DataFrame) -> str:
         option_labels[0],
     )
     selected_label = st.selectbox(
-        "Choose nonprofit",
+        "Choose organization",
         options=option_labels,
         index=option_labels.index(current_label),
         label_visibility="collapsed",
@@ -441,14 +441,14 @@ def build_company_summary(selected_row: pd.Series, selected_shocks: pd.DataFrame
     leverage_pct = format_percentile(selected_row.get("peer_liability_percentile"))
     summary = (
         f"{clean_text(selected_row.get('business_name'))} is a {clean_text(selected_row.get('sector_group'))} organization in "
-        f"{clean_text(selected_row.get('state'))}, grouped with {humanize_peer_group(selected_row.get('peer_group'))} peers. "
+        f"{clean_text(selected_row.get('state'))}, compared within the app's {humanize_peer_group(selected_row.get('peer_group'))} peer frame. "
         f"Baseline distress probability is {format_probability(selected_row.get('predicted_distress_probability'))}; reserve position is {reserve_pct} "
         f"and leverage sits at {leverage_pct} versus peers."
     )
     if shortlist_match is not None:
-        summary += f" It is currently flagged as {clean_text(shortlist_match.get('shortlist_category')).lower()}."
+        summary += f" It currently sits in the {clean_text(shortlist_match.get('shortlist_category')).lower()} prioritization category."
     if worst_case is not None:
-        summary += f" The most sensitive deterministic scenario is {scenario_label(worst_case.get('scenario_name'))}."
+        summary += f" Its largest deterministic stress-test move comes under {scenario_label(worst_case.get('scenario_name'))}."
 
     details = [
         ("EIN", format_ein(selected_row.get("ein"))),
@@ -456,7 +456,7 @@ def build_company_summary(selected_row: pd.Series, selected_shocks: pd.DataFrame
         ("Peer group", humanize_peer_group(selected_row.get("peer_group"))),
         ("Sector / state", f"{clean_text(selected_row.get('sector_group'))} | {clean_text(selected_row.get('state'))}"),
         ("Funding model", humanize_funding_bucket(selected_row.get("funding_bucket"))),
-        ("Most sensitive scenario", scenario_label(worst_case.get("scenario_name")) if worst_case is not None else "See Shock Simulator"),
+        ("Largest stress-test move", scenario_label(worst_case.get("scenario_name")) if worst_case is not None else "See Stress Testing"),
     ]
     return summary, details
 
@@ -556,8 +556,8 @@ def ranking_table_from_frame(ranked: pd.DataFrame, mode: str) -> pd.DataFrame:
     table["Reserve percentile"] = series_or_default(table, "peer_reserve_percentile").apply(format_percentile)
     table["Leverage percentile"] = series_or_default(table, "peer_liability_percentile").apply(format_percentile)
     table["Concentration percentile"] = series_or_default(table, "concentration_percentile").apply(format_percentile)
-    table["Top scenario"] = coalesce_series(table, ["scenario_name_view", "top_scenario"], default="-").apply(scenario_label)
-    table["Shock delta"] = coalesce_series(table, ["scenario_absolute_delta", "worst_case_delta"]).apply(format_points)
+    table["Top stress scenario"] = coalesce_series(table, ["scenario_name_view", "top_scenario"], default="-").apply(scenario_label)
+    table["Stress delta"] = coalesce_series(table, ["scenario_absolute_delta", "worst_case_delta"]).apply(format_points)
     table["Shortlist category"] = series_or_default(table, "shortlist_category", "-").fillna("-")
     table["Rationale"] = table.apply(lambda row: build_rationale(row, mode), axis=1)
     return table[
@@ -573,8 +573,8 @@ def ranking_table_from_frame(ranked: pd.DataFrame, mode: str) -> pd.DataFrame:
             "Reserve percentile",
             "Leverage percentile",
             "Concentration percentile",
-            "Top scenario",
-            "Shock delta",
+            "Top stress scenario",
+            "Stress delta",
             "Shortlist category",
             "Rationale",
         ]
@@ -589,8 +589,8 @@ def ranking_detail_card(row: pd.Series) -> str:
         f"Baseline risk: {format_probability(row.get('predicted_distress_probability'))}<br>"
         f"Reserve percentile: {format_percentile(row.get('peer_reserve_percentile'))}<br>"
         f"Leverage percentile: {format_percentile(row.get('peer_liability_percentile'))}<br>"
-        f"Top scenario: {scenario_label(row.get('scenario_name_view') if pd.notna(row.get('scenario_name_view')) else row.get('top_scenario'))}<br>"
-        f"Shock delta: {format_points(row.get('scenario_absolute_delta') if pd.notna(row.get('scenario_absolute_delta')) else row.get('worst_case_delta'))}"
+        f"Top stress scenario: {scenario_label(row.get('scenario_name_view') if pd.notna(row.get('scenario_name_view')) else row.get('top_scenario'))}<br>"
+        f"Stress delta: {format_points(row.get('scenario_absolute_delta') if pd.notna(row.get('scenario_absolute_delta')) else row.get('worst_case_delta'))}"
     )
 
 
@@ -601,8 +601,8 @@ def tab_risk_lookup(selected_row: pd.Series, threshold_scan: pd.DataFrame) -> No
 
     render_metric_cards(
         [
-            ("Baseline risk", format_probability(selected_row.get("predicted_distress_probability")), "Retained upgraded logistic output"),
-            ("Risk bucket", clean_text(selected_row.get("risk_bucket")), clean_text(selected_row.get("overall_risk_rank_bucket"))),
+            ("Baseline risk", format_probability(selected_row.get("predicted_distress_probability")), "Conservative interpretable baseline estimate"),
+            ("Risk bucket", clean_text(selected_row.get("risk_bucket")), "Current triage category"),
             ("Reserve percentile", format_percentile(selected_row.get("peer_reserve_percentile")), "Lower means weaker reserve position"),
             ("Leverage percentile", format_percentile(selected_row.get("peer_liability_percentile")), "Higher means more leverage pressure"),
         ]
@@ -610,54 +610,64 @@ def tab_risk_lookup(selected_row: pd.Series, threshold_scan: pd.DataFrame) -> No
 
     left, right = st.columns([1.15, 0.85])
     with left:
-        st.markdown('<div class="section-header">Driver graph</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Main drivers</div>', unsafe_allow_html=True)
         st.plotly_chart(make_driver_chart(drivers), width="stretch")
     with right:
         st.markdown('<div class="section-header">Key financial markers</div>', unsafe_allow_html=True)
         render_dataframe(key_financial_markers(selected_row))
 
-    st.markdown('<div class="section-header">Triggered threshold flags</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Threshold checks that fired</div>', unsafe_allow_html=True)
+    st.markdown(
+        note_card_html("Threshold checks are conservative warning cutoffs. A flag appears when the current filing crosses one of those stored boundaries."),
+        unsafe_allow_html=True,
+    )
     if threshold_flags:
         st.markdown("".join(flag_chip_html(flag["label"]) for flag in threshold_flags[:5]), unsafe_allow_html=True)
     else:
-        st.markdown(note_card_html("No retained threshold flags are triggered for this organization in the available data."), unsafe_allow_html=True)
+        st.markdown(note_card_html("No retained threshold checks are triggered for this organization in the available filing data."), unsafe_allow_html=True)
 
     driver_text = ", ".join(driver["label"] for driver in drivers[:3]) if drivers else "driver detail is limited in the stored artifacts"
     threshold_text = ", ".join(flag["label"].lower() for flag in threshold_flags[:3]) if threshold_flags else "no retained threshold cutoffs are currently triggered"
     render_insight_cards(
         [
             ("Bottom line", interpretation),
-            ("Top drivers", f"The strongest visible risk drivers are {driver_text}."),
-            ("Threshold read", f"The retained threshold scan indicates {threshold_text}."),
+            ("Main drivers", f"The strongest visible risk drivers are {driver_text}."),
+            ("Threshold takeaway", f"The retained threshold scan indicates {threshold_text}."),
         ]
     )
 
 
 def tab_peer_benchmarking(orgs: pd.DataFrame, selected_row: pd.Series) -> None:
     weakness_text, strength_text = benchmark_callouts(selected_row)
+    st.markdown(
+        note_card_html(
+            "Percentiles show where this organization sits within the app's size-and-funding peer frame. They are directional benchmarking signals, not a full sector-and-geography normalization."
+        ),
+        unsafe_allow_html=True,
+    )
     render_metric_cards(
         [
-            ("Reserve percentile", format_percentile(selected_row.get("peer_reserve_percentile")), "Higher is stronger"),
-            ("Margin percentile", format_percentile(selected_row.get("peer_margin_percentile")), "Higher is stronger"),
-            ("Leverage percentile", format_percentile(selected_row.get("peer_liability_percentile")), "Higher is riskier"),
-            ("Concentration percentile", format_percentile(selected_row.get("concentration_percentile")), "Higher is riskier"),
-            ("Overall peer risk", clean_text(selected_row.get("overall_risk_rank_bucket")), format_probability(selected_row.get("predicted_distress_probability"))),
+            ("Reserve percentile", format_percentile(selected_row.get("peer_reserve_percentile")), "Higher percentile = stronger reserve position"),
+            ("Margin percentile", format_percentile(selected_row.get("peer_margin_percentile")), "Higher percentile = stronger operating margin"),
+            ("Leverage percentile", format_percentile(selected_row.get("peer_liability_percentile")), "Higher percentile = more balance-sheet pressure"),
+            ("Concentration percentile", format_percentile(selected_row.get("concentration_percentile")), "Higher percentile = more funding concentration"),
+            ("Overall peer risk", clean_text(selected_row.get("overall_risk_rank_bucket")), "Peer-relative bucket plus baseline estimate"),
         ]
     )
 
     left, right = st.columns([1.08, 0.92])
     with left:
-        st.markdown('<div class="section-header">Peer-relative chart</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Peer-relative percentiles</div>', unsafe_allow_html=True)
         st.plotly_chart(make_benchmark_chart(selected_row), width="stretch")
     with right:
-        st.markdown('<div class="section-header">Peer comparison table</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Metric-by-metric comparison</div>', unsafe_allow_html=True)
         render_dataframe(build_benchmark_table(selected_row))
 
     render_insight_cards(
         [
-            ("Strongest weakness", weakness_text + " This should shape the first intervention conversation."),
-            ("Relative strength", strength_text + " It helps frame what not to disrupt during intervention."),
-            ("Peer context", peer_context_text(orgs, selected_row)),
+            ("Primary gap", weakness_text + " This is the cleanest place to start an intervention conversation."),
+            ("Primary strength", strength_text + " It helps frame what should be protected while intervening elsewhere."),
+            ("Comparison frame", peer_context_text(orgs, selected_row) + " Peer comparisons here are directional within size and funding buckets."),
         ]
     )
 
@@ -670,7 +680,7 @@ def tab_shock_simulator(
     shock_source_note: str,
 ) -> None:
     st.markdown(
-        note_card_html("Deterministic scenario engine for demo purposes. This is a stress test, not a causal forecast."),
+        note_card_html("Deterministic planning shocks applied to the current financial profile. Use this for downside planning, not prediction or causal inference."),
         unsafe_allow_html=True,
     )
     selected_shocks = org_shocks(shock_results, clean_text(selected_row.get("ein"), fallback=""))
@@ -686,7 +696,7 @@ def tab_shock_simulator(
         top_org_scenario = most_sensitive_scenario(selected_shocks)
         st.session_state["selected_scenario"] = top_org_scenario["scenario_name"] if top_org_scenario is not None else scenario_names[0]
 
-    st.markdown('<div class="section-header">Scenario selector</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Stress scenario</div>', unsafe_allow_html=True)
     selected_scenario = st.selectbox(
         "Scenario",
         options=scenario_names,
@@ -702,13 +712,13 @@ def tab_shock_simulator(
         scenario_row = shock_summary.loc[shock_summary["scenario_name"] == selected_scenario].iloc[0]
         render_metric_cards(
             [
-                ("Avg baseline risk", format_probability(scenario_row.get("avg_baseline_risk")), "Summary-level fallback"),
-                ("Avg shocked risk", format_probability(scenario_row.get("avg_shocked_risk")), "Summary-level fallback"),
-                ("Avg absolute change", format_points(scenario_row.get("avg_absolute_increase")), format_points(scenario_row.get("median_absolute_increase")) + " median"),
-                ("Bucket upshift share", format_relative(scenario_row.get("bucket_upshift_share")), "Share of orgs moving up a bucket"),
+                ("Average baseline risk", format_probability(scenario_row.get("avg_baseline_risk")), "Summary-level fallback"),
+                ("Average stressed risk", format_probability(scenario_row.get("avg_shocked_risk")), "Summary-level fallback"),
+                ("Average risk increase", format_points(scenario_row.get("avg_absolute_increase")), format_points(scenario_row.get("median_absolute_increase")) + " median"),
+                ("Bucket upshift share", format_relative(scenario_row.get("bucket_upshift_share")), "Share of organizations moving up a bucket"),
             ]
         )
-        st.warning("Only summary-level scenario output is available for this organization.")
+        st.warning("Only summary-level stress-test output is available for this organization.")
         render_dataframe(shock_summary.copy())
         return
 
@@ -716,32 +726,32 @@ def tab_shock_simulator(
     render_metric_cards(
         [
             ("Baseline risk", format_probability(scenario_row.get("baseline_risk")), clean_text(scenario_row.get("baseline_bucket"))),
-            ("Shocked risk", format_probability(scenario_row.get("shocked_risk")), clean_text(scenario_row.get("shocked_bucket"))),
-            ("Absolute change", format_points(scenario_row.get("absolute_increase")), format_relative(scenario_row.get("relative_increase"))),
+            ("Stressed risk", format_probability(scenario_row.get("shocked_risk")), clean_text(scenario_row.get("shocked_bucket"))),
+            ("Risk increase", format_points(scenario_row.get("absolute_increase")), format_relative(scenario_row.get("relative_increase"))),
             ("Bucket transition", clean_text(scenario_row.get("risk_bucket_transition")), scenario_label(selected_scenario)),
         ]
     )
 
     left, right = st.columns([1.08, 0.92])
     with left:
-        st.markdown('<div class="section-header">Scenario sensitivity graph</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Scenario sensitivity</div>', unsafe_allow_html=True)
         st.plotly_chart(make_scenario_delta_chart(selected_shocks, selected_scenario), width="stretch")
     with right:
-        st.markdown('<div class="section-header">Scenario results table</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Scenario outcomes</div>', unsafe_allow_html=True)
         render_dataframe(scenario_summary_table(selected_shocks))
 
     top_scenario = most_sensitive_scenario(selected_shocks)
     top_scenario_text = (
-        f"{scenario_label(top_scenario.get('scenario_name'))} produces the largest increase for this organization: "
+        f"{scenario_label(top_scenario.get('scenario_name'))} produces the largest modeled increase for this organization: "
         f"{format_points(top_scenario.get('absolute_increase'))} to {format_probability(top_scenario.get('shocked_risk'))}."
         if top_scenario is not None
         else "No top scenario was available."
     )
     render_insight_cards(
         [
-            ("What changed", shock_explanation(selected_row, scenario_row, shock_source_mode)),
-            ("Most sensitive scenario", top_scenario_text),
-            ("How to read this", "Use the simulator for triage and prioritization, not as a causal forecast of what will definitely happen."),
+            ("Scenario readout", shock_explanation(selected_row, scenario_row, shock_source_mode)),
+            ("Largest downside move", top_scenario_text),
+            ("How to use this", "Use this view to compare downside sensitivity and plan contingency conversations. It does not forecast what will happen."),
         ]
     )
 
@@ -750,7 +760,7 @@ def render_shortlist_section(title: str, shortlists: pd.DataFrame) -> None:
     st.markdown(f'<div class="section-header">{title}</div>', unsafe_allow_html=True)
     section_table = shortlist_table_for_section(shortlists, title)
     if section_table.empty:
-        st.markdown(note_card_html("No shortlist rows were available for this section."), unsafe_allow_html=True)
+        st.markdown(note_card_html("No organizations were available for this prioritization category."), unsafe_allow_html=True)
         return
 
     display = section_table.drop(columns=["ein"]).copy().rename(
@@ -760,31 +770,38 @@ def render_shortlist_section(title: str, shortlists: pd.DataFrame) -> None:
 
     chooser = {f"{row['business_name']} | {row['Baseline risk']}": row["ein"] for _, row in section_table.iterrows()}
     selected_option = st.selectbox(
-        f"Focus an organization from {title}",
+        f"Choose an organization from {title}",
         options=list(chooser.keys()),
         key=f"chooser_{title}",
     )
-    if st.button(f"Set focus to selected {title.lower()} organization", key=f"button_{title}"):
+    if st.button("Use selected organization in main view", key=f"button_{title}"):
         st.session_state["selected_ein"] = chooser[selected_option]
         rerun()
 
 
 def tab_high_impact_discovery(shortlists: pd.DataFrame) -> None:
     if shortlists.empty:
-        st.warning("No shortlist artifact was found.")
+        st.warning("No prioritization shortlist artifact was found.")
         return
+
+    st.markdown(
+        note_card_html(
+            "These categories support financially actionable prioritization, not mission-impact ranking. Fragile but investable highlights elevated-risk cases with plausible intervention leverage; resilient outperformers are peer-relative examples to learn from; shock-sensitive watchlist identifies organizations with the sharpest deterministic downside sensitivity."
+        ),
+        unsafe_allow_html=True,
+    )
 
     render_metric_cards(
         [
-            ("Fragile but investable", str((shortlists["shortlist_category"] == "Fragile but investable").sum()), "Intervention-ready cases"),
-            ("Resilient outperformers", str((shortlists["shortlist_category"] == "Resilient outperformer").sum()), "Peer-learning examples"),
-            ("Shock-sensitive watchlist", str((shortlists["shortlist_category"] == "Shock-sensitive priority watchlist").sum()), "Stress-monitor candidates"),
+            ("Fragile but investable", str((shortlists["shortlist_category"] == "Fragile but investable").sum()), "Elevated-risk cases with plausible intervention leverage"),
+            ("Resilient outperformers", str((shortlists["shortlist_category"] == "Resilient outperformer").sum()), "Peer-relative examples of stronger financial positioning"),
+            ("Shock-sensitive watchlist", str((shortlists["shortlist_category"] == "Shock-sensitive priority watchlist").sum()), "Organizations with the sharpest deterministic downside sensitivity"),
         ]
     )
 
     left, right = st.columns([1.08, 0.92])
     with left:
-        st.markdown('<div class="section-header">Shortlist landscape</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Prioritization map</div>', unsafe_allow_html=True)
         st.plotly_chart(make_discovery_chart(shortlists), width="stretch")
     with right:
         st.markdown('<div class="section-header">Category summary</div>', unsafe_allow_html=True)
@@ -795,14 +812,14 @@ def tab_high_impact_discovery(shortlists: pd.DataFrame) -> None:
     watch = shortlists.loc[shortlists["shortlist_category"] == "Shock-sensitive priority watchlist"].sort_values("worst_case_delta", ascending=False).iloc[0]
     render_insight_cards(
         [
-            ("Fragile but investable", f"{clean_text(fragile.get('business_name'))} is a strong intervention-ready example with {format_probability(fragile.get('predicted_distress_probability'))} baseline risk."),
-            ("Resilient outperformers", f"{clean_text(resilient.get('business_name'))} shows what strong reserve, margin, and leverage positioning looks like among peers."),
-            ("Shock-sensitive watchlist", f"{clean_text(watch.get('business_name'))} shows the sharpest shock jump at {format_points(watch.get('worst_case_delta'))}."),
+            ("Fragile but investable", f"{clean_text(fragile.get('business_name'))} is a representative intervention candidate with {format_probability(fragile.get('predicted_distress_probability'))} baseline risk."),
+            ("Resilient outperformers", f"{clean_text(resilient.get('business_name'))} shows what stronger reserve, margin, and leverage positioning looks like within its peer frame."),
+            ("Shock-sensitive watchlist", f"{clean_text(watch.get('business_name'))} shows the sharpest deterministic downside move at {format_points(watch.get('worst_case_delta'))}."),
         ]
     )
 
     st.markdown(
-        note_card_html("These lists are framed around financial resilience and intervention-readiness, not mission or social impact ranking."),
+        note_card_html("Use these lists to decide where attention may matter most financially. They do not measure mission impact or social value directly."),
         unsafe_allow_html=True,
     )
     for title in ["Fragile but investable", "Resilient outperformers", "Shock-sensitive watchlist"]:
@@ -820,7 +837,7 @@ def tab_portfolio_rankings(bundle: dict) -> None:
 
     st.markdown(
         note_card_html(
-            "Portfolio Rankings is the macro control room: use it to scan the full portfolio, compare ranking lenses, and push one organization back into the shared main-dashboard selection."
+            "Use this view to scan the full portfolio, compare prioritization lenses, and send one organization back into the shared organization view."
         ),
         unsafe_allow_html=True,
     )
@@ -842,10 +859,10 @@ def tab_portfolio_rankings(bundle: dict) -> None:
 
     controls_row_1 = st.columns([1.35, 1.1, 1.0, 0.7, 0.8])
     with controls_row_1[0]:
-        ranking_mode = st.selectbox("Ranking mode", options=RANKING_MODES, key="portfolio_ranking_mode")
+        ranking_mode = st.selectbox("Prioritization lens", options=RANKING_MODES, key="portfolio_ranking_mode")
     with controls_row_1[1]:
         scenario_control = st.selectbox(
-            "Scenario type",
+            "Stress scenario",
             options=scenario_options,
             index=scenario_options.index(current_scenario_control),
             format_func=scenario_label,
@@ -853,7 +870,7 @@ def tab_portfolio_rankings(bundle: dict) -> None:
         )
     with controls_row_1[2]:
         scenario_metric = st.selectbox(
-            "Scenario ranking metric",
+            "Stress ranking metric",
             options=scenario_metric_options,
             key="portfolio_scenario_metric",
         )
@@ -936,9 +953,9 @@ def tab_portfolio_rankings(bundle: dict) -> None:
     if summary.get("most_dangerous_scenario"):
         summary_cards.append(
             (
-                "Most dangerous scenario",
+                "Largest average stressor",
                 scenario_label(summary["most_dangerous_scenario"]),
-                "Average delta leader",
+                "Highest average downside increase",
             )
         )
     if "shortlist_category" in filtered.columns:
@@ -957,7 +974,7 @@ def tab_portfolio_rankings(bundle: dict) -> None:
 
     table_left, table_right = st.columns([1.45, 0.55])
     with table_left:
-        st.markdown('<div class="section-header">Portfolio ranking table</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Portfolio prioritization table</div>', unsafe_allow_html=True)
         render_dataframe(ranking_table_from_frame(ranked, ranking_mode), max_height=720)
     with table_right:
         top_row = ranked.iloc[0] if not ranked.empty else None
@@ -968,7 +985,7 @@ def tab_portfolio_rankings(bundle: dict) -> None:
                 f"This row ranks first for '{ranking_mode.lower()}' with baseline risk "
                 f"{format_probability(top_row.get('predicted_distress_probability'))}."
             )
-        st.markdown(insight_card_html("Quick interpretation", interpretation), unsafe_allow_html=True)
+        st.markdown(insight_card_html("Quick read", interpretation), unsafe_allow_html=True)
 
         if not ranked.empty:
             selected_option_map = {
@@ -985,7 +1002,7 @@ def tab_portfolio_rankings(bundle: dict) -> None:
                 list(selected_option_map.keys())[0],
             )
             selected_rank_label = st.selectbox(
-                "Selected row detail",
+                "Selected organization",
                 options=list(selected_option_map.keys()),
                 index=list(selected_option_map.keys()).index(selected_key),
                 key="portfolio_selected_row",
@@ -994,26 +1011,26 @@ def tab_portfolio_rankings(bundle: dict) -> None:
             st.session_state["portfolio_selected_ein"] = selected_rank_ein
             selected_rank_row = ranked.loc[ranked["ein"] == selected_rank_ein].iloc[0]
             st.markdown(
-                section_card_html("Selected-row summary", ranking_detail_card(selected_rank_row)),
+                section_card_html("Selected organization summary", ranking_detail_card(selected_rank_row)),
                 unsafe_allow_html=True,
             )
-            if st.button("Use selected org in main dashboard", key="portfolio_sync_button"):
+            if st.button("Use selected organization in main view", key="portfolio_sync_button"):
                 st.session_state["selected_ein"] = selected_rank_ein
                 rerun()
 
     render_insight_cards(
         [
             (
-                "Ranking lens",
+                "Prioritization lens",
                 f"The current lens is '{ranking_mode}'. Use it to compare portfolio-wide patterns before drilling into a single organization.",
             ),
             (
-                "Scenario experiment",
-                f"Scenario control is set to {scenario_label(scenario_control)} and ranks by {scenario_metric.lower()}.",
+                "Stress setting",
+                f"Stress control is set to {scenario_label(scenario_control)} and ranks by {scenario_metric.lower()}.",
             ),
             (
                 "Workflow",
-                "Use the table to identify a candidate, review the selected-row summary, and push that organization into the main tabs with the sync button.",
+                "Use the table to identify a candidate, review the selected organization summary, and push that organization into the main tabs with the sync button.",
             ),
         ]
     )

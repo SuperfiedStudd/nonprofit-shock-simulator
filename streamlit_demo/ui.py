@@ -399,11 +399,11 @@ GLOBAL_CSS = """
 def hero_html() -> str:
     return """
     <div class="hero-card">
-        <div class="hero-kicker">Fairlight Advisors | Aggie Hack Demo</div>
-        <div class="hero-title">Fairlight Resilience Dashboard</div>
+        <div class="hero-kicker">Fairlight Advisors | Aggie Hack Finals</div>
+        <div class="hero-title">Fairlight Resilience Decision System</div>
         <div class="hero-subtitle">
-            Clean, judge-facing decision support built on the retained upgraded logistic backbone and the
-            <code>peer_relative_composite</code> label.
+            Judge-facing nonprofit decision support for baseline resilience prediction, peer benchmarking,
+            deterministic stress testing, and financially actionable prioritization.
         </div>
     </div>
     """
@@ -420,7 +420,7 @@ def selector_note_html(body: str) -> str:
 def brief_summary_card_html(name: str, summary: str) -> str:
     return f"""
     <div class="brief-summary-card">
-        <div class="brief-kicker">Company briefing</div>
+        <div class="brief-kicker">Organization briefing</div>
         <div class="brief-name">{name}</div>
         <div class="brief-summary">{summary}</div>
     </div>

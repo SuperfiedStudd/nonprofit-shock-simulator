@@ -1,7 +1,7 @@
 <h1 align="center">IRS Form 990 Nonprofit Financial Resilience & Distress Modeling</h1>
 
 <p align="center">
-  A personal analytics + ML project that turns public nonprofit filings into a practical workflow for financial risk screening,
+  An analytics + ML project that turns public nonprofit filings into a practical workflow for financial risk screening,
   peer benchmarking, and deterministic stress testing.
 </p>
 
